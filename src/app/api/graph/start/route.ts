@@ -47,8 +47,14 @@ export async function POST(req: NextRequest) {
 
   // Incremental cursor lives in the DB, not the cookie (cookies can't be set
   // once the SSE body starts streaming). Backfill runs ignore and never advance it.
-  await initDb();
-  const storedCursor = demoMode ? null : await getSetting(CURSOR_KEY);
+  // A demo run never persists anything, so it skips the DB entirely — that lets a
+  // hosted demo deploy need no database at all (no Turso, and it survives a host
+  // with a read-only filesystem where creating a SQLite file would fail).
+  let storedCursor: string | null = null;
+  if (!demoMode) {
+    await initDb();
+    storedCursor = await getSetting(CURSOR_KEY);
+  }
   const runStartedAt = new Date().toISOString();
 
   const threadId = crypto.randomUUID();

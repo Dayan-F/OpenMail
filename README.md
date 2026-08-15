@@ -184,6 +184,36 @@ quality than Groq.
 
 ---
 
+## Deploy the demo to Vercel
+
+The demo runs LangGraph **on the server**, so it needs a Node host — it can't run on static
+GitHub Pages. Vercel's free tier connects straight to your GitHub repo and redeploys on every
+push, and the demo needs **no database** (it never persists), so there's nothing like Turso to
+set up.
+
+Each visitor brings **their own** Groq key (entered in the app on first visit), so you don't
+put any LLM key on the server.
+
+1. Push this repo to GitHub.
+2. At <https://vercel.com>, **Add New → Project** and import the repo.
+3. Add two environment variables:
+
+   ```bash
+   SESSION_SECRET=<openssl rand -hex 32>   # encrypts the session cookie
+   DEMO_ONLY=1                             # hides the self-host / Gmail path
+   ```
+
+4. Deploy. On first visit a user connects their own AI key (**Connect your AI** → paste a
+   free Groq key), then clicks **Try the demo → Run now**.
+
+Optional: set `DEMO_GROQ_API_KEY=gsk_...` if you'd rather the demo run on *your* key so
+visitors skip the connect step entirely — but then usage bills against your key.
+
+Everything else (`DATABASE_URL`, Google OAuth, Turso) is for the self-host path and can be
+left unset for a demo deploy.
+
+---
+
 ## Environment variables
 
 | Var | Purpose |
@@ -192,7 +222,9 @@ quality than Groq.
 | `DEMO_GROQ_API_KEY` | Key that powers `/demo` (can equal `GROQ_API_KEY`) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` | Your OAuth app (self-host) |
 | `SESSION_SECRET` | Encrypts the session cookie — any 32+ char random string |
-| `DATABASE_URL` | SQLite file, defaults to `file:./openmail.db` |
+| `DATABASE_URL` | Local SQLite file, defaults to `file:./openmail.db` (self-host path only; the demo skips it) |
+| `DEMO_ONLY` | Set to `1` for a demo-only deploy — hides the self-host / Gmail path |
+| `APP_ORIGIN` | Deployed host for server-action origin checks, no scheme (optional on Vercel) |
 | `CRON_SECRET` | Shared secret for the daily cron endpoint (`x-cron-secret` header) |
 
 Ollama is configured in the **/setup** UI (base URL + model), so it needs no env vars.

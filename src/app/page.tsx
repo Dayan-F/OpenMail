@@ -2,6 +2,9 @@ import Link from "next/link";
 import { getSession } from "@/lib/session";
 
 export default async function LandingPage() {
+  // A demo-only deploy (DEMO_ONLY=1) hides the self-host path entirely: no AI-connect
+  // gate and no "Connect Gmail" — just the demo, which runs on the server's own key.
+  const demoOnly = process.env.DEMO_ONLY === "1";
   const session = await getSession();
   const cfg = session.llmConfig;
   const providerLabel = cfg
@@ -20,7 +23,7 @@ export default async function LandingPage() {
       </div>
 
       {!cfg ? (
-        /* ── Step 1: no AI connected yet ── */
+        /* ── Step 1: no AI connected yet (you bring your own key) ── */
         <div className="flex flex-col items-center gap-4">
           <p className="text-gray-400 text-sm text-center max-w-sm">
             First, connect an AI provider. It powers email classification and reply drafting —
@@ -54,13 +57,16 @@ export default async function LandingPage() {
               Try the demo
               <span className="block text-xs font-normal text-indigo-200/80 mt-0.5">mock inbox, no Gmail</span>
             </Link>
-            <a
-              href="/api/auth/google"
-              className="flex-1 px-6 py-4 rounded-lg border border-gray-700 hover:border-gray-500 font-medium transition-colors text-center"
-            >
-              Connect Gmail
-              <span className="block text-xs font-normal text-gray-500 mt-0.5">your real inbox</span>
-            </a>
+            {/* Gmail is the self-host path — hidden on a demo-only deploy (DEMO_ONLY=1). */}
+            {!demoOnly && (
+              <a
+                href="/api/auth/google"
+                className="flex-1 px-6 py-4 rounded-lg border border-gray-700 hover:border-gray-500 font-medium transition-colors text-center"
+              >
+                Connect Gmail
+                <span className="block text-xs font-normal text-gray-500 mt-0.5">your real inbox</span>
+              </a>
+            )}
           </div>
         </div>
       )}
